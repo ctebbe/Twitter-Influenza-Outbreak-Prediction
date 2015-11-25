@@ -7,6 +7,7 @@ Created on Fri Nov 20 04:07:35 2015
 import matplotlib
 matplotlib.use('Agg')
 
+import os, requests
 import csv
 import matplotlib.pyplot as plt
 import time
@@ -29,6 +30,20 @@ def linear_model_main(X_parameters,Y_parameters,predict_value=None):
     predictions['coefficient'] = regr.coef_
     predictions['predicted_value'] = predict_outcome
     return predictions
+
+#converts the latex formula to a png image
+def formula_as_file( formula, file, negate=False ):
+    tfile = file
+    if negate:
+        tfile = 'tmp.png'
+    #change the size to small or huge in place of large to get a different sized image 
+    r = requests.get( 'http://latex.codecogs.com/png.latex?\dpi{300} \large %s' % formula )
+    f = open( tfile, 'wb' )
+    f.write( r.content )
+    f.close()
+    if negate:
+        os.system( 'convert tmp.png -channel RGB -negate -colorspace rgb %s' %file )
+
     
 def train_model(maxM=5, maxN=5):
     lrmse = 100 #holds the least rmse value which is a percent value
@@ -96,14 +111,14 @@ def train_model(maxM=5, maxN=5):
             X.append([(m, n), rmse, p['coefficient'].tolist(), p['predicted_value'].tolist()])
             if rmse/1000 < lrmse:
                 lrmse = rmse/1000
-                R = [(m, n), lrmse, p['coefficient'].tolist(), tw, map(lambda x: float(x)/1000, ty), map(lambda x: float(x)/1000, p['predicted_value'].tolist())]
+                R = [(m, n), lrmse, p['coefficient'].tolist(), tw, map(lambda x: float(x)/1000, ty), map(lambda x: float(x)/1000, p['predicted_value'].tolist()), p['intercept']]
     
     with open('log.csv', 'wb') as csvfile:
         logwriter = csv.writer(csvfile)
         logwriter.writerow(["(M, N)", "RMSE", "[Coefficients]", "[Predicted Values]"])
         for i in range(len(X)):
             logwriter.writerow(X[i])
-        logwriter.writerow(["(M, N)", "Least RMSE %", "[Coefficients]", "[Week numbers]", "[Actual values]", "[Predicetd values]"])
+        logwriter.writerow(["(M, N)", "Least RMSE %", "[Coefficients]", "[Week numbers]", "[Actual values]", "[Predicetd values]", "intercept"])
         logwriter.writerow(R)
         
     fig = plt.figure(figsize=(16,10))
@@ -125,8 +140,8 @@ def train_model(maxM=5, maxN=5):
     plt.ylabel("Percentage of ILI Cases", fontsize=18)
     colors = ['m', 'b']
     labels = ['Predicted ILI', 'Actual ILI']
-    plt.plot(R[3], R[5], color=colors[0], label=labels[0], linewidth=3,  marker='o')
-    plt.plot(R[3], R[4], color=colors[1], label=labels[1], linewidth=3,  marker='s')
+    plt.plot(R[3], R[5], color=colors[0], label=labels[0], linewidth=3, marker='o')
+    plt.plot(R[3], R[4], color=colors[1], label=labels[1], linewidth=3, marker='s')
     plt.xticks(R[3])
     plt.legend(loc='upper center', ncol=2, fancybox=False, fontsize='xx-large')
     plt.savefig('ili_prediction_graph.png')
@@ -134,7 +149,7 @@ def train_model(maxM=5, maxN=5):
     
     #showing m,n and the corresponding rmse values in a tabular format
     # and highlighting the least rmse
-    print "\033[31;1m### m,n and rmse values (least rmse is highlighted) ###\033[0m"
+    print "\033[31;1m" + "### m,n and rmse values (least rmse is highlighted) ###" + "\033[0m"
     lm, ln = R[0]
     header = ["(m, n)"]
     header.extend(map(lambda x: "n = %s" %(x), [i for i in range(maxN)]))
@@ -146,21 +161,31 @@ def train_model(maxM=5, maxN=5):
                 row.append(" -- ")
                 continue
             if m == lm and n == ln:
-                #%.4f will print 4 decimals, \033[35;1m] magenta font bold set, \033[0m] no styling
-                row.append("\033[35;1m%.4f\033[0m" %(X[m*maxN + n -1][1]/1000))
+                #%.4f will print 4 decimals, \033[35;1m magenta font bold set, \033[0m no styling
+                row.append("\033[35;1m" + "%.4f" %(X[m*maxN + n -1][1]/1000) + "\033[0m")
+                #generating the equation of the model                
+                eqn = r'y(t) ='
+                for i in range(n):
+                    if i == n-1:
+                        eqn = eqn + ' b_0u(t) +'
+                    else: eqn = eqn + ' b_' + str(n-i-1) + 'u(t - ' + str(n-i-1) + ') +'
+                for j in range(m):
+                    eqn = eqn + ' a_' + str(m-j) + 'y(t - ' + str(m-j) + ') +'
+                eqn = eqn + ' c'
+                formula_as_file(eqn, 'arxeqn.png')
             else: row.append("%.4f" %(X[m*maxN + n -1][1]/1000))
         t.add_row(row)
     print t    
     
     #Displaying least RMSE and the corresponding m, n along with the coefficients
-    print "\033[31;1m### (m,n) values, least RMSE\033[0m"
+    print "\033[31;1m" + "### (m,n) values, least RMSE" + "\033[0m"
     print R[0], R[1]
     
-    print "\033[31;1m### Least rmse coefficients\033[0m"
-    print R[2]        
+    print "\033[31;1m" + "### [Least rmse coefficients], intercept" + "\033[0m"
+    print R[2], R[6]        
 
 if __name__ == '__main__':
     start = time.time()
     train_model()
     end = time.time()
-    print "\033[31;1m### Elapsed time:\033[0m %s seconds" %(end - start)
+    print "\033[31;1m" + "### Elapsed time:" + "\033[0m" + " %s seconds" %(end - start)
