@@ -16,7 +16,7 @@ import java.util.Date;
 /**
  * Created by Qiu on 11/7/15.
  */
-public class ParserMapper extends Mapper<Text, Text, Text, IntWritable> {
+public class ParserMapper extends Mapper<Text, Text, Text, Text> {
 
     public static final IntWritable ONE = new IntWritable(1);
 
@@ -34,8 +34,9 @@ public class ParserMapper extends Mapper<Text, Text, Text, IntWritable> {
             if (month == 11 && week == 1) {
                 year += 1;
             }
+
             Text newKey = new Text(year + "-" + week);
-            context.write(newKey, ONE);
+            context.write(newKey, value);
         } catch (ParseException e) {
             e.printStackTrace();
         }

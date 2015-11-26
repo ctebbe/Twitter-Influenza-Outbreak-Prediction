@@ -20,9 +20,12 @@ import java.io.IOException;
  */
 public class TwitterParser {
 
-    public static final String INPUT_PATH = "/testdata";
+    public static final String INPUT_PATH = "/testdata/twitter-stream-2011-09-28/28/";
     public static final String OUTPUT_PATH = "/parser/output";
-    public static final String REGEX = "/#flu|[F|f]lu|[I|i]nfluenza|[H|h][1|3|7][N|n][1|3|9]/g\n";
+    public static final String REGEX1 = ".*([H|h][1|3|7][N|n][1|3|9]).*";
+    public static final String REGEX2 = ".*ILI.*|flu|[F|f]lu|.*[I|i]nfluenza.*";
+
+    //    public static final String REGEX = "ImTight";
     public static final String TIME_ZONE = "Pacific Time (US & Canada)";
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
@@ -54,10 +57,10 @@ public class TwitterParser {
         }
         FileOutputFormat.setOutputPath(parserJob, outputPath);
         parserJob.setMapOutputKeyClass(Text.class);
-        parserJob.setMapOutputValueClass(IntWritable.class);
+        parserJob.setMapOutputValueClass(Text.class);
         parserJob.setOutputFormatClass(TextOutputFormat.class);
         parserJob.setOutputKeyClass(Text.class);
-        parserJob.setOutputValueClass(IntWritable.class);
+        parserJob.setOutputValueClass(Text.class);
 
         parserJob.waitForCompletion(true);
     }
