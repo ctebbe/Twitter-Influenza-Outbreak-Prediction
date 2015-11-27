@@ -12,6 +12,8 @@ import java.util.Date;
  */
 public class Util {
 
+    public static final String REGEX = "/#flu|[F|f]lu|[I|i]nfluenza|[H|h][1|3|7][N|n][1|3|9]/g";
+
     public static String getTimeStamp() {
         return new SimpleDateFormat("HH:mm:ss:SS").format(new Date());
     }
