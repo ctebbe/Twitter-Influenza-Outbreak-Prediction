@@ -9,6 +9,7 @@ import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
+import util.Util;
 
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -42,11 +43,19 @@ public class TwitterSpout extends BaseRichSpout {
                 .setOAuthConsumerSecret(consumerSecret)
                 .setOAuthAccessToken(accessToken)
                 .setOAuthAccessTokenSecret(accessTokenSecret)
-                ;//.setJSONStoreEnabled(true);
+                .setJSONStoreEnabled(true);
         twStream = new TwitterStreamFactory(confBuilder.build()).getInstance();
+
         twStream.addListener(new StatusListener() {
             public void onStatus(Status status) {
-                msgs.offer(status.getText());
+                GeoLocation loc = status.getGeoLocation();
+                if(loc != null) {
+                    if(loc.getLongitude() > 105
+                            && loc.getLongitude() < 135
+                            && status.getText().matches(Util.REGEX)) {
+                        msgs.offer(status.getText());
+                    }
+                }
             }
 
             public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {

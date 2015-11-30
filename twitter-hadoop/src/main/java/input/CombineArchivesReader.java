@@ -28,6 +28,7 @@ public class CombineArchivesReader extends RecordReader<Text, Text>{
         CombineFileSplit combineFileSplit = (CombineFileSplit) split;
         FileSplit fileSplit = new FileSplit(combineFileSplit.getPath(index),
                 combineFileSplit.getOffset(index), combineFileSplit.getLength(), combineFileSplit.getLocations());
+
         archiveReader.initialize(fileSplit, context);
     }
 
