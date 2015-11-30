@@ -17,18 +17,22 @@ import java.util.StringTokenizer;
 /**
  * Created by ct.
  */
-public class HashtagsExtractLogBolt extends BaseRichBolt {
+public class ThresholdBolt extends BaseRichBolt {
 
     PrintWriter writer;
     private final String filename;
     private OutputCollector collector;
+    private int threshold;
+    private int count;
 
-    public HashtagsExtractLogBolt(String filename) {
+    public ThresholdBolt(String filename) {
         this.filename = filename;
+        count = 0;
     }
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+        threshold = (Integer) map.get("threshold");
         collector = outputCollector;
         try {
             writer = new PrintWriter(filename,"UTF-8");
@@ -42,18 +46,10 @@ public class HashtagsExtractLogBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         String text = tuple.getStringByField("message");
-        StringTokenizer st = new StringTokenizer(text);
-        StringBuilder sb = new StringBuilder();
-        while(st.hasMoreElements()) {
-            String tmp = (String) st.nextElement();
-            if(StringUtils.startsWith(tmp, "#")) { // extract hashtags
-                sb.append(tmp);
-            }
-        }
-        if(sb.length() > 0) {
-            writer.println(Util.getTimeStamp() +":"+ sb.toString());
-            writer.flush();
-        }
+        writer.println(Util.getTimeStamp() + ":" + text);
+        if(++count > threshold)
+            writer.println("*** THRESHOLD EXCEEDED ***");
+        writer.flush();
         collector.ack(tuple);
     }
 
