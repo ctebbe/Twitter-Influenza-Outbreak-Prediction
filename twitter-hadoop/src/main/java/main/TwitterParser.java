@@ -5,6 +5,7 @@ import mapreduce.ParserMapper;
 import mapreduce.ParserReducer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -13,6 +14,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -20,8 +22,8 @@ import java.io.IOException;
  */
 public class TwitterParser {
 
-    public static final String INPUT_PATH = "/testdata/twitter-stream-2011-09-28/28/";
-    public static final String OUTPUT_PATH = "/parser/output";
+    //    public static final String INPUT_PATH = "/testdata";
+//    public static final String OUTPUT_PATH = "/parser/output";
     public static final String REGEX1 = ".*([H|h][1|3|7][N|n][1|3|9]).*";
     public static final String REGEX2 = ".*ILI.*|flu|[F|f]lu|.*[I|i]nfluenza.*";
 
@@ -29,10 +31,17 @@ public class TwitterParser {
     public static final String TIME_ZONE = "Pacific Time (US & Canada)";
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+        String INPUT_PATH = args[0];
+        String OUTPUT_PATH = args[1];
+//        File input = new File(INPUT_PATH);
         Path inputPath = new Path(INPUT_PATH);
-        Path outputPath = new Path(OUTPUT_PATH);
 
         Configuration configuration = new Configuration();
+
+//        String[] files = FileUtil.list(input);
+//        for (int i = 0; i < files.length; i++) {
+//        FileUtil.unTar(input, new File(INPUT_PATH + "/untar"));
+        Path outputPath = new Path(OUTPUT_PATH);
 
         Job parserJob = Job.getInstance(configuration, "TwitterParser");
 
@@ -51,10 +60,10 @@ public class TwitterParser {
         parserJob.setInputFormatClass(CombineArchivesInputFormat.class);
 
         FileSystem fs = FileSystem.get(configuration);
-        if (fs.exists(outputPath)) {
-            fs.delete(outputPath, true);
-            System.out.println("Output Path: \"" + outputPath.getName() + "\" exists. Deleted.");
-        }
+//        if (fs.exists(outputPath)) {
+//            fs.delete(outputPath, true);
+//            System.out.println("Output Path: \"" + outputPath.getName() + "\" exists. Deleted.");
+//        }
         FileOutputFormat.setOutputPath(parserJob, outputPath);
         parserJob.setMapOutputKeyClass(Text.class);
         parserJob.setMapOutputValueClass(Text.class);
@@ -63,7 +72,7 @@ public class TwitterParser {
         parserJob.setOutputValueClass(Text.class);
 
         parserJob.waitForCompletion(true);
+//        }
     }
-
 }
 
