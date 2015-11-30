@@ -29,8 +29,8 @@ public class TwitterParser {
     public static final String TIME_ZONE = "Pacific Time (US & Canada)";
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        Path inputPath = new Path(INPUT_PATH);
-        Path outputPath = new Path(OUTPUT_PATH);
+        Path inputPath = new Path(args[0]);
+        Path outputPath = new Path(args[1]);
 
         Configuration configuration = new Configuration();
 
@@ -51,10 +51,10 @@ public class TwitterParser {
         parserJob.setInputFormatClass(CombineArchivesInputFormat.class);
 
         FileSystem fs = FileSystem.get(configuration);
-        if (fs.exists(outputPath)) {
-            fs.delete(outputPath, true);
-            System.out.println("Output Path: \"" + outputPath.getName() + "\" exists. Deleted.");
-        }
+//        if (fs.exists(outputPath)) {
+//            fs.delete(outputPath, true);
+//            System.out.println("Output Path: \"" + outputPath.getName() + "\" exists. Deleted.");
+//        }
         FileOutputFormat.setOutputPath(parserJob, outputPath);
         parserJob.setMapOutputKeyClass(Text.class);
         parserJob.setMapOutputValueClass(Text.class);

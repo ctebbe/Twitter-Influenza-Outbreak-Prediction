@@ -102,9 +102,8 @@ public class ArchiveReader extends RecordReader<Text, Text> {
 //                if (timezone.equals(TwitterParser.TIME_ZONE)) {//!text.matches(TwitterParser.REGEX)){ //&& timezone.equals(TwitterParser.TIME_ZONE)) {
 
 //                throw (new IOException(String.valueOf(json)));
-                Iterator iterator = hashtags.iterator();
-                while (iterator.hasNext()) {
-                    JSONObject hashtag = (JSONObject) iterator.next();
+                for (int i =0; i < hashtags.length();i++) {
+                    JSONObject hashtag = (JSONObject) hashtags.get(i);
 
                     if ((hashtag.getString("text").matches(TwitterParser.REGEX1) ||
                             hashtag.getString("text").matches(TwitterParser.REGEX2)) &&
