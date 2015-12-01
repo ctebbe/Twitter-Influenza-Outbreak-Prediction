@@ -18,7 +18,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * Created by Qiu on 11/25/2015.
@@ -35,7 +34,9 @@ public class ArchiveReader extends RecordReader<Text, Text> {
     private Path path;
     private int tweetsSkipped;
     private boolean eof;
-    private String date;
+    private String date = "";
+    private boolean validBzFile;
+    private String hashtagstr;
 
     public ArchiveReader(TaskAttemptContext context) {
         this.context = context;
@@ -67,54 +68,67 @@ public class ArchiveReader extends RecordReader<Text, Text> {
             start += lineReader.readLine(new Text(), 0, (int) Math.min(Integer.MAX_VALUE, end - start));
         }
 
-        start += lineReader.readLine(currentLine);
+        try {
+            start += lineReader.readLine(currentLine);
+        } catch (IOException e) {
+            validBzFile = false;
+            return;
+        }
+
+        validBzFile = true;
     }
 
     @Override
     public boolean nextKeyValue() throws IOException, InterruptedException {
+
+        if (!validBzFile) {
+            return false;
+        }
         if (eof) {
             return false;
         }
         if (!this.filename.endsWith(".bz2")) {
             return false;
         }
-        String grandparentFolder = this.path.getParent().getParent().getName();
+//        throw new IOException(hashtagstr);
+//        String grandparentFolder = this.path.getParent().getParent().getName();
 //        throw new IOException(file);
-        if (!grandparentFolder.matches("\\d{2}")) {
-            return false;
-        }
+//        if (!grandparentFolder.matches("\\d{2}")) {
+//            return false;
+//        }
 
 
         int b = lineReader.readLine(currentLine);
-//        throw (new IOException(String.valueOf(currentLine)));
         currentPos += b;
-//        hashtagstr = "";
+        hashtagstr = "";
+
         while (b != 0) {
-            json = new JSONObject(currentLine.toString());
             try {
+                json = new JSONObject(currentLine.toString());
                 JSONArray hashtags = json.getJSONObject("entities").getJSONArray("hashtags");
 
                 String timezone = json.getJSONObject("user").getString("time_zone");
 
                 String[] datetime = json.getString("created_at").split(" ");
                 date = datetime[5] + "-" + datetime[1] + "-" + datetime[2];
-
 //                if (timezone.equals(TwitterParser.TIME_ZONE)) {//!text.matches(TwitterParser.REGEX)){ //&& timezone.equals(TwitterParser.TIME_ZONE)) {
 
 //                throw (new IOException(String.valueOf(json)));
-                for (int i =0; i < hashtags.length();i++) {
+                for (int i = 0; i < hashtags.length(); i++) {
                     JSONObject hashtag = (JSONObject) hashtags.get(i);
 
                     if ((hashtag.getString("text").matches(TwitterParser.REGEX1) ||
                             hashtag.getString("text").matches(TwitterParser.REGEX2)) &&
-                            timezone.equals(TwitterParser.TIME_ZONE)) {
+                            timezone.equals(TwitterParser.TIME_ZONE) && !date.equals("")) {
 //                    throw (new IOException(text));
-//                    hashtagstr += "<" + ((JSONObject) iterator.next()).getString("text") + ">";
+                        hashtagstr += "<" + hashtag.getString("text") + ">";
+
                         return true;
                     } else if (timezone.equals(TwitterParser.TIME_ZONE)) {
                         tweetsSkipped++;
                     }
                 }
+
 
             } catch (JSONException e) {
 //                throw (new IOException(String.valueOf(currentLine)));
@@ -122,9 +136,14 @@ public class ArchiveReader extends RecordReader<Text, Text> {
 //                b = lineReader.readLine(currentLine);
 //                currentPos += b;
 //                continue;
+
             } finally {
-                b = lineReader.readLine(currentLine);
-                currentPos += b;
+                try {
+                    b = lineReader.readLine(currentLine);
+                    currentPos += b;
+                } catch (IOException e) {
+//                    throw new IOException(String.valueOf(currentLine));
+                }
             }
 //            b = lineReader.readLine(currentLine);
 //            currentPos += b;
@@ -136,6 +155,7 @@ public class ArchiveReader extends RecordReader<Text, Text> {
 
     @Override
     public Text getCurrentKey() throws IOException, InterruptedException {
+//        throw (new IOException(date));
 
         return new Text(date);
 //        return new Text(hashtagstr);

@@ -1,5 +1,6 @@
 package main;
 
+import input.BigArchiveInputFormat;
 import input.CombineArchivesInputFormat;
 import mapreduce.ParserMapper;
 import mapreduce.ParserReducer;
@@ -48,13 +49,13 @@ public class TwitterParser {
 
         FileInputFormat.setInputPaths(parserJob, inputPath);
         FileInputFormat.setInputDirRecursive(parserJob, true);
-        parserJob.setInputFormatClass(CombineArchivesInputFormat.class);
+        parserJob.setInputFormatClass(BigArchiveInputFormat.class);
 
         FileSystem fs = FileSystem.get(configuration);
-//        if (fs.exists(outputPath)) {
-//            fs.delete(outputPath, true);
-//            System.out.println("Output Path: \"" + outputPath.getName() + "\" exists. Deleted.");
-//        }
+        if (fs.exists(outputPath)) {
+            fs.delete(outputPath, true);
+            System.out.println("Output Path: \"" + outputPath.getName() + "\" exists. Deleted.");
+        }
         FileOutputFormat.setOutputPath(parserJob, outputPath);
         parserJob.setMapOutputKeyClass(Text.class);
         parserJob.setMapOutputValueClass(Text.class);
