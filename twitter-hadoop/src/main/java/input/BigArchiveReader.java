@@ -28,6 +28,7 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
     private String filename;
     private LineReader lineReader;
     private FSDataInputStream fSDataInputStream;
+    private TaskAttemptContext context;
 
     private Text currentLine = new Text("");
     private boolean validBzFile, eof;
@@ -35,8 +36,10 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
     private String date = "";
     private int tweetsSkipped;
     private CompressionInputStream compressionInputStream;
+    private long counter = 0;
 
     public BigArchiveReader(FileSplit split, TaskAttemptContext context) throws IOException {
+        this.context = context;
         Configuration conf = context.getConfiguration();
         start = split.getStart();
         end = start + split.getLength();
@@ -82,8 +85,12 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
         }
 
         int b = lineReader.readLine(currentLine);
-
         while (b != 0) {
+            counter++;
+            if (counter % 1000 == 0) {
+                context.progress();
+            }
+
             try {
                 json = new JSONObject(currentLine.toString());
                 JSONArray hashtags = json.getJSONObject("entities").getJSONArray("hashtags");
