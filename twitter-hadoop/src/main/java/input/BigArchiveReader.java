@@ -6,8 +6,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.compress.BZip2Codec;
-import org.apache.hadoop.io.compress.CompressionInputStream;
+import org.apache.hadoop.io.compress.*;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -46,12 +45,14 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
 
         FileSystem fileSystem = path.getFileSystem(conf);
         fSDataInputStream = fileSystem.open(path);
-//        fSDataInputStream.seek(start);
+        fSDataInputStream.seek(start);
 
         BZip2Codec codec = new BZip2Codec();
         codec.setConf(conf);
+        compressionInputStream = codec.createInputStream(fSDataInputStream, decompressor, start, end, SplittableCompressionCodec.READ_MODE.BYBLOCK);
 
-        compressionInputStream = codec.createInputStream(fSDataInputStream);
+//        compressionInputStream = codec.createInputStream(fSDataInputStream);
+//        compressionInputStream.seek(start);
         lineReader = new LineReader(compressionInputStream, conf);
 
     }
