@@ -49,6 +49,7 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
 
         BZip2Codec codec = new BZip2Codec();
         codec.setConf(conf);
+        Decompressor decompressor = codec.createDecompressor();
         compressionInputStream = codec.createInputStream(fSDataInputStream, decompressor, start, end, SplittableCompressionCodec.READ_MODE.BYBLOCK);
 
 //        compressionInputStream = codec.createInputStream(fSDataInputStream);
