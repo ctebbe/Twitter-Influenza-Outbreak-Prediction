@@ -5,7 +5,7 @@ Created on Fri Nov 20 04:07:35 2015
 """
 # to get rid of - no display name and no $DISPLAY environment variable error
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('agg')
 
 import os, requests
 import csv
@@ -66,7 +66,12 @@ def train_model(maxM=5, maxN=5):
             weeks.append(int(row[1]))
             ilix.append(int(row[2]))
             iliy.append(int(row[2])*100000/int(row[3])) #ili patients per 100k visitors
-            tweets.append(int(row[3]))
+            #tweets.append(int(row[3]))
+
+    with open('tweettrain.csv', 'rb') as csvfile:
+        ilireader = csv.reader(csvfile, delimiter=',', quotechar='"')
+        for row in ilireader:
+            tweets.append(int((float(row[2])*100000/int(row[3])))*100) #scaling twitter data
     
     with open('ilitest.csv', 'rb') as csvfile:
         ilireader = csv.reader(csvfile, delimiter=',', quotechar='"')
@@ -74,13 +79,12 @@ def train_model(maxM=5, maxN=5):
             tweeks.append(int(row[1]))
             tilix.append(int(row[2]))
             tiliy.append(int(row[2])*100000/int(row[3]))
-            ttweets.append(int(row[3]))
+            #ttweets.append(int(row[3]))
             
-    with open('trainout.csv', 'wb') as csvfile:
-        trainwriter = csv.writer(csvfile)
-        trainwriter.writerow(["YEAR", "WEEK", "TWEETS", "ILICASES", "ILIPER100K"])
-        for i in range(len(years)):
-            trainwriter.writerow([years[i], weeks[i], tweets[i], ilix[i], iliy[i]])
+    with open('tweettest.csv', 'rb') as csvfile:
+        ilireader = csv.reader(csvfile, delimiter=',', quotechar='"')
+        for row in ilireader:
+            ttweets.append(int((float(row[2])*100000/int(row[3])))*100) #scaling twitter data
         
     for m in range(maxM):
         for n in range(maxN):
@@ -124,8 +128,8 @@ def train_model(maxM=5, maxN=5):
     fig = plt.figure(figsize=(16,10))
     ax = fig.add_subplot(1,1,1)                                                      
     # major ticks every 1, minor ticks every 0.2                                      
-    y_major_ticks = np.arange(0, 7, 1)                                              
-    y_minor_ticks = np.arange(0, 7, 0.2)                                               
+    y_major_ticks = np.arange(0, 3, 1)                                              
+    y_minor_ticks = np.arange(0, 3, 0.1)                                               
     # major ticks every 4, minor ticks every 1    
     x_major_ticks = np.arange(0, 40, 4)
     x_minor_ticks = np.arange(0, 40, 1)
@@ -186,6 +190,6 @@ def train_model(maxM=5, maxN=5):
 
 if __name__ == '__main__':
     start = time.time()
-    train_model()
+    train_model(8,8)
     end = time.time()
     print "\033[31;1m" + "### Elapsed time:" + "\033[0m" + " %s seconds" %(end - start)
