@@ -61,6 +61,7 @@ public class ArchiveReader extends RecordReader<Text, Text> {
 
 //        //initial start point and end point
         start = split.getStart();
+        System.out.println(filename + ":" + start);
         end = start + split.getLength();
         currentPos = start;
 //        compressionInputStream.(start);
@@ -68,22 +69,22 @@ public class ArchiveReader extends RecordReader<Text, Text> {
             start += lineReader.readLine(new Text(), 0, (int) Math.min(Integer.MAX_VALUE, end - start));
         }
 
-        try {
-            start += lineReader.readLine(currentLine);
-        } catch (IOException e) {
-            validBzFile = false;
-            return;
-        }
+//        try {
+        start += lineReader.readLine(currentLine);
+//        } catch (IOException e) {
+//            validBzFile = false;
+//            return;
+//        }
 
-        validBzFile = true;
+//        validBzFile = true;
     }
 
     @Override
     public boolean nextKeyValue() throws IOException, InterruptedException {
 
-        if (!validBzFile) {
-            return false;
-        }
+//        if (!validBzFile) {
+//            return false;
+//        }
         if (eof) {
             return false;
         }

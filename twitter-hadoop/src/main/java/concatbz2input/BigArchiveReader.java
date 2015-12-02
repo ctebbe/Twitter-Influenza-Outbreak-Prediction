@@ -1,6 +1,9 @@
-package input;
+package concatbz2input;
 
 import main.TwitterParser;
+import mapreduce.ParserMapper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -23,6 +26,7 @@ import java.io.IOException;
  */
 public class BigArchiveReader extends RecordReader<Text, Text> {
 
+    private CompressionCodecFactory compressionCodecs = null;
     private long start;
     private long end;
     private String filename;
@@ -35,10 +39,12 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
     private JSONObject json;
     private String date = "";
     private int tweetsSkipped;
-    private CompressionInputStream compressionInputStream;
+    private SplitCompressionInputStream compressionInputStream;
     private long counter = 0;
 
+
     public BigArchiveReader(FileSplit split, TaskAttemptContext context) throws IOException {
+
         this.context = context;
         Configuration conf = context.getConfiguration();
         start = split.getStart();
@@ -50,6 +56,9 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
         fSDataInputStream = fileSystem.open(path);
         fSDataInputStream.seek(start);
 
+        Log log = LogFactory.getLog(ParserMapper.class);
+        log.info(filename + ":" + start);
+        System.out.println(filename + ":" + start + ":" + split.getLength());
         BZip2Codec codec = new BZip2Codec();
         codec.setConf(conf);
         Decompressor decompressor = codec.createDecompressor();
@@ -58,13 +67,12 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
 //        compressionInputStream = codec.createInputStream(fSDataInputStream);
 //        compressionInputStream.seek(start);
         lineReader = new LineReader(compressionInputStream, conf);
-
     }
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
         try {
-            start += lineReader.readLine(currentLine);
+        start += lineReader.readLine(currentLine);
         } catch (IOException e) {
             validBzFile = false;
             return;
@@ -85,7 +93,8 @@ public class BigArchiveReader extends RecordReader<Text, Text> {
         }
 
         int b = lineReader.readLine(currentLine);
-        while (b != 0) {
+        while (b != 0 && compressionInputStream.getPos() < end) {
+
             counter++;
             if (counter % 1000 == 0) {
                 context.progress();

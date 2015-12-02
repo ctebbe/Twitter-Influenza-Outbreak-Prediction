@@ -1,13 +1,11 @@
 package main;
 
-import input.BigArchiveInputFormat;
-import input.CombineArchivesInputFormat;
+import concatbz2input.BigArchiveInputFormat;
 import mapreduce.ParserMapper;
 import mapreduce.ParserReducer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -32,6 +30,7 @@ public class TwitterParser {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         Path inputPath = new Path(args[0]);
         Path outputPath = new Path(args[1]);
+        int reducerNum = Integer.parseInt(args[2]);
 
         Configuration configuration = new Configuration();
 
@@ -46,6 +45,8 @@ public class TwitterParser {
         parserJob.setMapperClass(ParserMapper.class);
         parserJob.setCombinerClass(ParserReducer.class);
         parserJob.setReducerClass(ParserReducer.class);
+
+        parserJob.setNumReduceTasks(reducerNum);
 
         FileInputFormat.setInputPaths(parserJob, inputPath);
         FileInputFormat.setInputDirRecursive(parserJob, true);
